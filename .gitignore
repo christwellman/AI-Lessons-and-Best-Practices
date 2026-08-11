@@ -1,0 +1,10 @@
+# hash cache for enrich_and_simplify.py — regenerable, machine/session-specific
+.cache/
+
+# never commit API keys
+.env
+*.key
+secrets.json
+
+__pycache__/
+*.pyc

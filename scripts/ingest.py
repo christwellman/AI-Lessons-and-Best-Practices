@@ -5,17 +5,17 @@ frontmattered markdown under processed/ for consumption by downstream AI
 workflows (agent/skill/prompt reviewers, RAG indexers, etc).
 
 Usage:
-    python scripts/ingest.py --raw-dir raw --out-dir processed
+    python scripts/ingest.py [--raw-dir raw] [--out-dir processed] [--delete-after-ingest]
 
-Raw layout (flat, matches what actually gets copied out of Downloads):
-    raw/youtube/<slug>.md   — has "---" frontmatter (title/author/video URL)
-                              plus a "## Transcript" section with the body.
-    raw/articles/<slug>.md  — frontmatter is optional; body is the article,
-                              title falls back to the first H1 or the filename.
+Raw layout: flat raw/*.md files, any mix of YouTube transcripts and
+articles. Source type is auto-detected — a "video:" frontmatter field or a
+"## Transcript" heading means youtube, otherwise article — so there's no
+folder to sort into and no way to put a file in the "wrong" place.
 
-Output: processed/<source_type>-<slug>.md, flat (no category subfolders —
-category/tags live in frontmatter and get aggregated into index/manifest.json,
-which is the thing downstream agents should actually read to find content).
+raw/ is local scratch space, not a tracked archive (see README): it's
+gitignored, and --delete-after-ingest removes each source file once it's
+been written to processed/, for people who don't want raw copies lingering
+on disk either.
 
 Deliberately does NOT call an LLM or guess a category here — that stays a
 fast, deterministic, offline pass. Classification, summarization, and STE100
@@ -53,9 +53,9 @@ def content_id(source_type: str, slug: str) -> str:
     return f"{source_type}_{h}"
 
 
-def write_processed(out_dir: Path, source_type: str, slug: str, meta: dict, body: str) -> Path:
+def write_processed(out_dir: Path, slug: str, meta: dict, body: str) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
-    dest = out_dir / f"{source_type}-{slug}.md"
+    dest = out_dir / f"{slug}.md"
     content = build_frontmatter(meta) + (
         f"\n## Summary\n\n{STUB_SUMMARY}\n\n"
         f"## Key Takeaways\n\n{STUB_TAKEAWAYS}\n\n"
@@ -87,57 +87,56 @@ def base_meta(source_type: str, slug: str, title: str, source_url: str, author: 
     }
 
 
-def ingest_youtube(raw_dir: Path, out_dir: Path):
-    yt_dir = raw_dir / "youtube"
-    if not yt_dir.exists():
-        return
-    for item in sorted(yt_dir.glob("*.md")):
-        text = item.read_text(encoding="utf-8", errors="ignore")
-        fm, body, _ = parse_frontmatter(text)
+def detect_source_type(fm: dict, body: str) -> str:
+    if fm.get("video"):
+        return "youtube"
+    if TRANSCRIPT_SECTION_RE.search(body):
+        return "youtube"
+    return "article"
 
-        title = (fm.get("title") or item.stem.replace("-", " ").title())
-        title = re.sub(r"\.md$", "", title).strip()
-        author = fm.get("author", "")
-        url = fm.get("video", "")
 
+def ingest_file(item: Path, out_dir: Path, delete_after: bool):
+    text = item.read_text(encoding="utf-8", errors="ignore")
+    fm, body, _ = parse_frontmatter(text)
+    source_type = detect_source_type(fm, body)
+
+    if source_type == "youtube":
         transcript_match = TRANSCRIPT_SECTION_RE.search(body)
-        transcript = transcript_match.group(1) if transcript_match else body
-        cleaned = clean_text(transcript)
+        content_body = transcript_match.group(1) if transcript_match else body
+        source_url = fm.get("video", "")
+    else:
+        content_body = body
+        source_url = fm.get("url", "")
 
-        slug = slugify(item.stem)
-        meta = base_meta("youtube", slug, title, url, author, "")
-        dest = write_processed(out_dir, "youtube", slug, meta, cleaned)
-        print(f"[youtube] {item.name} -> {dest}")
+    h1_match = H1_RE.search(body)
+    title = fm.get("title") or (h1_match.group(1).strip() if h1_match else item.stem.replace("-", " ").title())
+    title = re.sub(r"\.md$", "", title).strip()
+    cleaned = clean_text(content_body)
 
+    slug = slugify(item.stem)
+    meta = base_meta(source_type, slug, title, source_url, fm.get("author", ""), fm.get("published", ""))
+    dest = write_processed(out_dir, slug, meta, cleaned)
+    print(f"[{source_type}] {item.name} -> {dest}")
 
-def ingest_articles(raw_dir: Path, out_dir: Path):
-    art_dir = raw_dir / "articles"
-    if not art_dir.exists():
-        return
-    for item in sorted(art_dir.glob("*.md")):
-        text = item.read_text(encoding="utf-8", errors="ignore")
-        fm, body, _ = parse_frontmatter(text)
-
-        h1_match = H1_RE.search(body)
-        title = fm.get("title") or (h1_match.group(1).strip() if h1_match else item.stem.replace("-", " ").title())
-        cleaned = clean_text(body)
-
-        slug = slugify(item.stem)
-        meta = base_meta("article", slug, title, fm.get("url", ""), fm.get("author", ""), fm.get("published", ""))
-        dest = write_processed(out_dir, "article", slug, meta, cleaned)
-        print(f"[article] {item.name} -> {dest}")
+    if delete_after:
+        item.unlink()
+        print(f"  deleted raw source: {item}")
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--raw-dir", default="raw")
     parser.add_argument("--out-dir", default="processed")
+    parser.add_argument(
+        "--delete-after-ingest", action="store_true",
+        help="delete each raw file once it's been written to processed/ — raw/ is local scratch space, not a tracked archive",
+    )
     args = parser.parse_args()
 
     raw_dir = Path(args.raw_dir)
     out_dir = Path(args.out_dir)
-    ingest_youtube(raw_dir, out_dir)
-    ingest_articles(raw_dir, out_dir)
+    for item in sorted(raw_dir.glob("*.md")):
+        ingest_file(item, out_dir, args.delete_after_ingest)
 
 
 if __name__ == "__main__":

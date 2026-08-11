@@ -1,0 +1,122 @@
+{
+  "generated_entries": 5,
+  "categories": [
+    "skills",
+    "techniques",
+    "tools"
+  ],
+  "ste100_pending": 0,
+  "ste100_simplified": 5,
+  "entries": [
+    {
+      "id": "article_8c3c0876",
+      "title": "Ai Workflow",
+      "source_type": "article",
+      "source_url": "",
+      "author": "",
+      "published": "",
+      "ingested": "2026-08-10",
+      "category": "tools",
+      "tags": [
+        "multi-tool-workflow",
+        "model-selection",
+        "ai-stack",
+        "agentic-workflow"
+      ],
+      "summary": "Stop using one artificial intelligence tool for all tasks. Use different tools for specific tasks because each tool has unique strengths. Build a stack of multiple tools to do your daily work efficiently.",
+      "ste100_status": "simplified",
+      "ste100_model": "gemini-3.5-flash-lite",
+      "path": "processed/article-ai-workflow.md",
+      "word_count": 466,
+      "has_extracted_techniques": false
+    },
+    {
+      "id": "article_f4f37fe5",
+      "title": "Database Of Top Ai Tools",
+      "source_type": "article",
+      "source_url": "",
+      "author": "",
+      "published": "",
+      "ingested": "2026-08-10",
+      "category": "tools",
+      "tags": [
+        "ai-tools",
+        "directory",
+        "software-list",
+        "business-ai"
+      ],
+      "summary": "This document lists top artificial intelligence tools for different business tasks. It groups applications by category such as audio, content generation, and software engineering. Users can find specific software options for various professional workflows.",
+      "ste100_status": "simplified",
+      "ste100_model": "gemini-3.5-flash-lite",
+      "path": "processed/article-database-of-top-ai-tools.md",
+      "word_count": 558,
+      "has_extracted_techniques": false
+    },
+    {
+      "id": "youtube_c990fdf7",
+      "title": "10x Your Note Organisation in Obsidian",
+      "source_type": "youtube",
+      "source_url": "https://www.youtube.com/watch?v=0lXbEHKDLp8&time_continue=3&source_ve_path=NzY3NTg&embeds_referring_euri=https%3A%2F%2Fwww.reddit.com%2F&embeds_referring_origin=https%3A%2F%2Fwww.reddit.com",
+      "author": "Karlos Obsidian Tutorials",
+      "published": "",
+      "ingested": "2026-08-10",
+      "category": "tools",
+      "tags": [
+        "obsidian",
+        "note-taking",
+        "plugin",
+        "file-navigation"
+      ],
+      "summary": "The notebook navigator plug-in upgrades file navigation in Obsidian vaults. It provides dual-pane layouts, file previews, tags, icons, colors, and folder hiding. Users can also install recommended companion plugins for images, styling, and advanced search.",
+      "ste100_status": "simplified",
+      "ste100_model": "gemini-3.5-flash-lite",
+      "path": "processed/youtube-10x-your-note-organisation-in-obsidian.md",
+      "word_count": 1961,
+      "has_extracted_techniques": false
+    },
+    {
+      "id": "youtube_6e31efb8",
+      "title": "How Anthropic Engineers ACTUALLY Prompt Claude Code",
+      "source_type": "youtube",
+      "source_url": "https://www.youtube.com/watch?v=qOvc9IUKEIc",
+      "author": "Austin Marchese",
+      "published": "",
+      "ingested": "2026-08-10",
+      "category": "skills",
+      "tags": [
+        "claude-skills",
+        "prompt-engineering",
+        "agentic-workflows",
+        "anthropic"
+      ],
+      "summary": "Anthropic engineers use reusable Claude skills instead of traditional individual prompts. Skills contain three layers: descriptions, instructions, and tools like scripts. Users build small composable skills and update them after each session to create a compounding improvement loop.",
+      "ste100_status": "simplified",
+      "ste100_model": "gemini-3.5-flash-lite",
+      "path": "processed/youtube-how-anthropic-engineers-actually-prompt-claude-code.md",
+      "word_count": 2394,
+      "has_extracted_techniques": false
+    },
+    {
+      "id": "youtube_81dac74a",
+      "title": "My Simple Claude Cowork System (for normal people)",
+      "source_type": "youtube",
+      "source_url": "https://www.youtube.com/watch?v=0_dSWLOHKng",
+      "author": "Jeff Su",
+      "published": "",
+      "ingested": "2026-08-10",
+      "category": "techniques",
+      "tags": [
+        "claude-os",
+        "prompt-stacking",
+        "persistent-memory",
+        "workstation-architecture"
+      ],
+      "summary": "Build a structured workspace folder for your AI agent using markdown instruction files and memory logs. The root configuration file acts as a central constitution that points to specialized subfolders for different workflows. Stack workstation-specific rules on top of global preferences to maintain consistent tone and context across sessions. Use a session audit skill at the end of work to update memory files and preserve important user preferences.",
+      "ste100_status": "simplified",
+      "ste100_model": "gemini-3.5-flash-lite",
+      "path": "processed/youtube-my-simple-claude-cowork-system-for-normal-people.md",
+      "word_count": 3688,
+      "has_extracted_techniques": true
+    }
+  ]
+}

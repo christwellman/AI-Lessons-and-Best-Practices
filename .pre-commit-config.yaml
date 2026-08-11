@@ -1,0 +1,40 @@
+# .pre-commit-config.yaml
+# Install: pip install pre-commit google-genai && pre-commit install
+#
+# Fast/local hooks run on every commit. enrich-and-simplify only calls the
+# LLM for processed/*.md files that actually changed (hash-cached — see
+# scripts/enrich_and_simplify.py), and it's skippable with STE100_SKIP=1.
+# A heavy AI check that blocks every commit gets bypassed in practice, so
+# this stays opt-out, not mandatory.
+#
+# For the one-time bulk backlog pass, do NOT rely on this hook — run
+# `python scripts/enrich_and_simplify.py --all` directly (see README).
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^raw/
+      - id: end-of-file-fixer
+        exclude: ^raw/
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ["--maxkb=5000"]
+
+  - repo: local
+    hooks:
+      - id: enrich-and-simplify
+        name: Classify + summarize + ASD-STE100 simplify (LLM, cached, opt-out)
+        entry: python scripts/enrich_and_simplify.py
+        language: system
+        pass_filenames: false
+        files: ^processed/.*\.md$
+        stages: [pre-commit]
+
+      - id: build-manifest
+        name: Rebuild index/manifest.json
+        entry: python scripts/build_manifest.py
+        language: system
+        pass_filenames: false
+        files: ^processed/.*\.md$

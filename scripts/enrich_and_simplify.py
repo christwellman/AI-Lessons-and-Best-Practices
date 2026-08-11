@@ -326,6 +326,7 @@ def main():
         return 0
 
     changed_any = False
+    failed = []
     print(f"Running enrich-and-simplify via {provider}:{model} on {len(uncached)} file(s) ({len(files) - len(uncached)} cached)...")
     for f in files:
         path = Path(f)
@@ -336,14 +337,19 @@ def main():
                 changed_any = True
         except Exception as e:
             print(f"  ERROR on {f}: {e}", file=sys.stderr)
-            save_cache(cache)
-            return 1
+            failed.append(f)
 
     save_cache(cache)
+
+    if failed:
+        print(f"\n{len(failed)} file(s) failed and were left untouched (will retry next run):")
+        for f in failed:
+            print(f"  - {f}")
+
     if changed_any and not args.all:
         print("\nFiles were enriched and modified in place.\nReview the changes, then `git add` them and commit again.")
         return 1
-    return 0
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

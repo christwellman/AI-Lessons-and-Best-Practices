@@ -40,6 +40,7 @@ import hashlib
 import os
 import re
 import subprocess
+import time
 import sys
 from pathlib import Path
 
@@ -202,6 +203,26 @@ def call_llm(provider: str, model: str, content: str) -> str:
     raise ValueError(f"Unknown provider: {provider}")
 
 
+RETRY_DELAY_RE = re.compile(r"retryDelay['\"]?\s*:\s*['\"]?(\d+)")
+RATE_LIMIT_MARKERS = ("429", "RESOURCE_EXHAUSTED", "rate limit", "rate_limit")
+
+
+def call_llm_with_retry(provider: str, model: str, content: str, max_retries: int = 5) -> str:
+    for attempt in range(max_retries + 1):
+        try:
+            return call_llm(provider, model, content)
+        except Exception as e:
+            msg = str(e)
+            is_rate_limit = any(marker in msg for marker in RATE_LIMIT_MARKERS)
+            if not is_rate_limit or attempt == max_retries:
+                raise
+            delay_match = RETRY_DELAY_RE.search(msg)
+            delay = int(delay_match.group(1)) + 2 if delay_match else min(5 * (2 ** attempt), 60)
+            print(f"  rate limited, retrying in {delay}s (attempt {attempt + 1}/{max_retries})...", file=sys.stderr)
+            time.sleep(delay)
+    raise RuntimeError("unreachable")
+
+
 def parse_json_response(raw: str) -> dict:
     raw = raw.strip()
     if raw.startswith("```"):
@@ -232,7 +253,7 @@ def process_file(path: Path, provider: str, model: str, cache: dict) -> bool:
         return False
 
     protected, placeholders = protect(full_content)
-    raw_response = call_llm(provider, model, protected)
+    raw_response = call_llm_with_retry(provider, model, protected)
     result = parse_json_response(raw_response)
     result = {k: restore_in_value(v, placeholders) for k, v in result.items()}
 

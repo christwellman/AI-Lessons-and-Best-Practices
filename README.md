@@ -9,10 +9,9 @@ tools) can read it, not just humans.
 
 ```
 raw/
-  youtube/<slug>.md     # untouched copies of downloaded transcripts
-  articles/<slug>.md    # untouched copies of downloaded articles
+  <slug>.md               # local scratch space, gitignored, not tracked
 processed/
-  <source_type>-<slug>.md   # normalized markdown, one file per doc, flat
+  <slug>.md                # normalized markdown, one file per doc, flat
 index/
   manifest.json          # generated — read this first, not the tree
 scripts/
@@ -21,11 +20,25 @@ scripts/
   build_manifest.py       # processed -> index/manifest.json
 ```
 
-`raw/` is a permanent, untouched archive — if the ingestion logic changes
-later, nothing is lost. `processed/` is flat (no category subfolders): a
-doc's category can change on re-classification without moving/renaming
-files, and `index/manifest.json` — not directory layout — is the intended
-way for an agent to find things.
+`processed/` is flat (no category subfolders): a doc's category can change
+on re-classification without moving/renaming files, and
+`index/manifest.json` — not directory layout — is the intended way for an
+agent to find things.
+
+**`raw/` is deliberately NOT a tracked archive.** The original design kept
+raw sources permanently git-tracked as a safety net for future re-ingestion.
+That was dropped as duplicative: `raw/` is gitignored local scratch space —
+drop files in, run `ingest.py`, and the normalized `processed/*.md` is the
+only thing that ends up in git. `ingest.py --delete-after-ingest` will even
+remove each raw file once it's been written to `processed/`, if you don't
+want raw copies lingering on disk either. Trade-off, made deliberately: if
+the ingestion logic changes later, there's no raw archive to re-run it
+against — only `processed/` output as it existed at ingest time.
+
+Source type (YouTube vs. article) is auto-detected per file — a `video:`
+frontmatter field or a `## Transcript` heading means YouTube, otherwise
+article — so `raw/` is a single flat folder with no sorting step and no
+"wrong folder" to put a file in.
 
 ## Why this differs from the original draft design
 
@@ -50,6 +63,9 @@ real sample files:
   open this file" without opening it.
 - **`processed/` has no category subdirectories** (see above) — the manifest
   is the index, not the filesystem.
+- **`raw/` is gitignored scratch space, not a tracked archive**, and has no
+  youtube/articles split — source type is auto-detected per file. See the
+  callout above for the trade-off this accepts.
 
 ## Setup
 
@@ -66,16 +82,23 @@ export GEMINI_API_KEY=...        # default provider
 # or: export ANTHROPIC_API_KEY=... STE100_PROVIDER=anthropic
 ```
 
-Default model is Gemini 2.5 Flash-Lite (cheapest capable option for a
-controlled-language rewrite task). Override with `STE100_MODEL=<id>`.
+Default model is Gemini 3.5 Flash-Lite (cheapest capable option for a
+controlled-language rewrite task, as of the current Gemini model
+generation). Override with `STE100_MODEL=<id>`. Free-tier Gemini keys are
+rate-limited (commonly 15 requests/minute) — `enrich_and_simplify.py`
+retries with backoff on rate-limit errors, so a bulk run just goes slower
+under a free-tier key rather than failing partway through.
 
 ## Day-to-day workflow
 
-1. Drop new transcripts/articles into `raw/youtube/` or `raw/articles/`
-   (copy, don't move, from wherever you exported them).
+1. Drop new transcripts/articles into `raw/` (copy, don't move, from
+   wherever you exported them — any mix of YouTube transcripts and
+   articles, source type is auto-detected).
 2. `python scripts/ingest.py` — normalizes them into `processed/`, no API
-   calls, safe to run anytime.
-3. `git add raw processed` and commit. The pre-commit hook calls the LLM
+   calls, safe to run anytime. Add `--delete-after-ingest` if you don't
+   want the raw copies kept around locally either.
+3. `git add processed` and commit (there's nothing to add under `raw/` —
+   it's gitignored). The pre-commit hook calls the LLM
    only on the `processed/*.md` files you just staged, rewrites them in
    place with category/tags/summary/takeaways/techniques filled in, and
    exits non-zero so you can review the diff.

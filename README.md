@@ -7,11 +7,12 @@ tools) can read it, not just humans.
 
 ## What's in here now
 
+<!-- BEGIN GENERATED STATS -->
 66 docs (59 articles, 7 YouTube transcripts), ~219k words, all classified
 and simplified:
 
 | category | docs |
-|----------------|-----|
+| --- | --- |
 | techniques | 24 |
 | tools | 14 |
 | best-practices | 11 |
@@ -19,9 +20,14 @@ and simplified:
 | skills | 6 |
 | trends | 4 |
 
-34 docs carry extracted techniques/prompts. These counts are a snapshot —
-`index/manifest.json` is the source of truth and carries them under
-`generated_entries`, `categories`, and `ste100_simplified`.
+34 docs carry extracted techniques/prompts.
+<!-- END GENERATED STATS -->
+
+Regenerated from `index/manifest.json` by
+`scripts/update_readme_stats.py`, which runs as a pre-commit hook — don't
+hand-edit the block above. The manifest is the source of truth and carries
+these counts under `generated_entries`, `categories`, and
+`ste100_simplified`.
 
 ## How it's organized
 
@@ -37,6 +43,7 @@ scripts/
   ingest.py                 # raw -> processed (no API calls, deterministic)
   enrich_and_simplify.py    # classify + summarize + STE100-simplify (LLM, cached)
   build_manifest.py         # processed -> index/manifest.json
+  update_readme_stats.py    # manifest -> README "What's in here now"
 .cache/                     # gitignored — enrich hash cache, regenerable
 ```
 
@@ -170,7 +177,11 @@ Valid categories are `prompts`, `skills`, `best-practices`, `tools`,
 python scripts/ingest.py [--raw-dir raw] [--out-dir processed]
 python scripts/enrich_and_simplify.py [--all] [--estimate-only] [--out-dir processed]
 python scripts/build_manifest.py [--out-dir processed] [--manifest index/manifest.json]
+python scripts/update_readme_stats.py [--readme README.md] [--check]
 ```
+
+`update_readme_stats.py --check` reports a stale block without writing,
+for use in CI.
 
 ## Costs
 

@@ -38,3 +38,14 @@ repos:
         language: system
         pass_filenames: false
         files: ^processed/.*\.md$
+
+      # Must stay after build-manifest: it reads the manifest that hook
+      # regenerates, so running it first would use stale counts.
+      - id: update-readme-stats
+        name: Refresh README contents block from manifest
+        entry: python scripts/update_readme_stats.py
+        language: system
+        pass_filenames: false
+        # README.md is included so a hand-edited stats block is repaired too,
+        # not just one made stale by new content.
+        files: ^(processed/.*\.md|index/manifest\.json|README\.md)$

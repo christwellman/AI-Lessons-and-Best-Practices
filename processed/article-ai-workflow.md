@@ -5,31 +5,30 @@ source_type: "article"
 source_url: ""
 author: ""
 published: ""
-ingested: "2026-08-10"
+ingested: "2026-08-23"
 category: "tools"
-tags: [multi-tool-workflow, model-selection, ai-stack, agentic-workflow]
-summary: "Stop using one artificial intelligence tool for all tasks. Use different tools for specific tasks because each tool has unique strengths. Build a stack of multiple tools to do your daily work efficiently."
+tags: [multi-model-workflow, ai-stack, model-selection]
+summary: "Stop using one artificial intelligence tool for all tasks. Use different tools for specific tasks. Each artificial intelligence product has one main strength. Switch tools when a task fails instead of using the same prompt repeatedly."
 ste100_status: "simplified"
 ste100_model: "gemini-3.5-flash-lite"
 ---
 
 ## Summary
 
-Stop using one artificial intelligence tool for all tasks. Use different tools for specific tasks because each tool has unique strengths. Build a stack of multiple tools to do your daily work efficiently.
+Stop using one artificial intelligence tool for all tasks. Use different tools for specific tasks. Each artificial intelligence product has one main strength. Switch tools when a task fails instead of using the same prompt repeatedly.
 
 ## Key Takeaways
 
-- Use  CODE0  as the central command center for project instructions and prompts.
-- Use  CODE2  for long document analysis and marathon articles.
-- Use  CODE6  for superior web search and link-grabbing capabilities.
-- Use  CODE8  to build and deploy simple app prototypes instantly.
-- Use  CODE10  to get real-time trending news from  CODE11  .
-- Switch tools instead of repeating prompts in the same tool when a task fails.
-- Turn the working tool and prompt combination into an agentic workflow later.
+- Use multiple artificial intelligence tools together for better results.
+- Use Claude as a central command center for project instructions.
+- Use Gemini for long document analysis and custom extractions.
+- Use ChatGPT for web search and link fetching.
+- Use Google AI Studio for simple app prototypes.
+- Use Grok for real-time news and social media context.
 
 ## Techniques / Prompts Extracted
 
-None identified.
+- |- **[Claude]( CODE0  Our central command center (yours might be GPT-5 or Copilot instead). Here’s where we save all our go-to prompts as [project instructions]( CODE1  we tab between and fire them off as needed (_usually as 5x open browser windows we tab between depending on what task we need to do next)_.    - **[Gemini]( CODE2  Long document analysis. We have custom [Gems]( CODE3  for extracting insights from Youtube vids, plus a 26K-word system prompt saved in [AI Studio]( CODE4  for writing marathon articles (overkill for most tasks, but possible via Gemini).    - **[Gemini Nano Banana]( CODE5  Quick image edits when we need them.    - **[ChatGPT:]( CODE6  Ironically the best Google searcher. Superior web fetch capabilities and link-grabbing compared to the others (_and doesn’t add weird [google.com]( CODE7  params to everything)_.    - **[Google AI Studio Build tab]( CODE8  Still unmatched for simple app prototypes (“vibe coding”) You can connect your app to GitHub, connect your GitHub to Cloudflare Pages, and deploy edits instantly.        - _If you want more vibe-coding options, check out_ _[this video from Greg Isenberg]( CODE9  _of the startup ideas podcast that debates and ranks them all._        - **[Grok]( CODE10  Great for trending news on [X.com]( CODE11  questions—use it with something like [this workflow]( CODE12  ([code]( CODE13  [video]( CODE14  Nobody beats it for real-time social media context. Also, [_Grok Code Fast 1_]( CODE15  is v popular on OpenRouter.|
 
 ## Full Content
 

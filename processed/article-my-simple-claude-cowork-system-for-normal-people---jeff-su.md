@@ -1,38 +1,44 @@
 ---
-id: "youtube_81dac74a"
+id: "article_65928d4f"
 title: "My Simple Claude Cowork System (for normal people)"
-source_type: "youtube"
-source_url: "https://www.youtube.com/watch?v=0_dSWLOHKng"
+source_type: "article"
+source_url: ""
 author: "Jeff Su"
 published: ""
 ingested: "2026-08-23"
-category: "techniques"
-tags: [claude-os, persistent-memory, rule-stacking, workstations, context-management]
-summary: "Build a structured folder system for AI assistants to maintain persistent memory and context. The root directory contains master rules and memory files that point to specialized workstations. This architecture uses rule stacking and resources folders to keep token usage low."
+category: "best-practices"
+tags: [claude-cowork, prompt-engineering, context-management, agent-system]
+summary: "This document explains how to build a personal AI workspace using hierarchical markdown files and folder structures. The system uses a root configuration file for global rules, memory files for persistence, and specialized workstations for specific tasks. This setup reduces token usage while maintaining relevant context across sessions."
 ste100_status: "simplified"
 ste100_model: "gemini-3.5-flash-lite"
 ---
 
 ## Summary
 
-Build a structured folder system for AI assistants to maintain persistent memory and context. The root directory contains master rules and memory files that point to specialized workstations. This architecture uses rule stacking and resources folders to keep token usage low.
+This document explains how to build a personal AI workspace using hierarchical markdown files and folder structures. The system uses a root configuration file for global rules, memory files for persistence, and specialized workstations for specific tasks. This setup reduces token usage while maintaining relevant context across sessions.
 
 ## Key Takeaways
 
-- Create a root folder named Co-work OS to act as the central hub.
-- Store master rules in a claw.md file and recent context in a memory.md file.
-- Use universal and dedicated workstations for specific tasks and projects.
-- Stack workstation-specific rules on top of global root instructions.
-- Keep root claw.md files under three hundred lines to reduce token cost.
-- Run a session audit command at the end of each session to save new preferences.
+- Use a root claw.md file as the global constitution for the AI workspace.
+- Store persistent memories in a memory.md file and load it at the start of every session.
+- Create universal and dedicated workstations with their own instruction files and resources.
+- Keep the root instruction file under 300 lines to save tokens.
+- Default to the Sonnet model for most tasks and use Opus only for complex, multi-step workflows.
 
 ## Techniques / Prompts Extracted
 
 - At the start of every session, read memory.md before responding.
 - When I say remember this, write the information to memory.md.
-- {forward slash} session audit
+- /session audit
+- before we wrap, audit this session
 
 ## Full Content
+
+# My Simple Claude Cowork System (for normal people)
+
+**Author:** Jeff Su
+
+## Transcript
 
 Hey Co-worker, I am hung over. What are
 we supposed to be doing today?
@@ -613,7 +619,7 @@ Have a great one.
 
 ## Source
 
-- Type: youtube
-- URL: https://www.youtube.com/watch?v=0_dSWLOHKng
+- Type: article
+- URL: n/a
 - Author: Jeff Su
 - Published: n/a

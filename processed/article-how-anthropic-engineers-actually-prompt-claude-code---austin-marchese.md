@@ -1,37 +1,41 @@
 ---
-id: "youtube_6e31efb8"
+id: "article_c7ec4d52"
 title: "How Anthropic Engineers ACTUALLY Prompt Claude Code"
-source_type: "youtube"
-source_url: "https://www.youtube.com/watch?v=qOvc9IUKEIc"
+source_type: "article"
+source_url: ""
 author: "Austin Marchese"
 published: ""
 ingested: "2026-08-23"
-category: "skills"
-tags: [claude-skills, prompt-engineering, agentic-workflows, anthropic]
-summary: "Anthropic engineers prompt Claude using composable skills instead of repetitive custom prompts. Skills package procedural knowledge into folders containing descriptions, instructions, and tools like Python scripts. Users update skills continuously after each session to create a compounding improvement loop."
+category: "techniques"
+tags: [claude-code, agent-skills, prompt-engineering, workflow-automation]
+summary: "Anthropic engineers build modular AI skills instead of writing single prompts for repetitive tasks. A skill contains a title description, step instructions, and tools like Python scripts or APIs. Small composable skills chain together and improve over every session through continuous updates."
 ste100_status: "simplified"
 ste100_model: "gemini-3.5-flash-lite"
 ---
 
 ## Summary
 
-Anthropic engineers prompt Claude using composable skills instead of repetitive custom prompts. Skills package procedural knowledge into folders containing descriptions, instructions, and tools like Python scripts. Users update skills continuously after each session to create a compounding improvement loop.
+Anthropic engineers build modular AI skills instead of writing single prompts for repetitive tasks. A skill contains a title description, step instructions, and tools like Python scripts or APIs. Small composable skills chain together and improve over every session through continuous updates.
 
 ## Key Takeaways
 
-- Stop writing new prompts for repetitive tasks and build Claude skills instead.
+- Use reusable skills instead of writing custom prompts for repetitive tasks.
 - Structure skills with three layers: description, instructions, and tools.
-- Prioritize building robust tools, code scripts, and reference files inside skills.
-- Build small, composable, and reusable skills rather than one massive skill.
-- Save deterministic Python scripts inside skills to trade expensive AI tokens for cheap code compute.
-- Use user-invocable and disable-model-invocation flags to control who runs specific skills.
-- Update skills after every session to capture edge cases and compound performance over time.
+- Build small composable skills instead of one large monolithic skill.
+- Save Python scripts inside skills to trade AI tokens for deterministic code compute.
+- Update the skill definition after each session to compound improvements over time.
 
 ## Techniques / Prompts Extracted
 
 None identified.
 
 ## Full Content
+
+# How Anthropic Engineers ACTUALLY Prompt Claude Code
+
+**Author:** Austin Marchese
+
+## Transcript
 
 I listened to Anthropic's engineers at
 the AI Code Summit and I learned
@@ -388,7 +392,7 @@ you over there. Peace.
 
 ## Source
 
-- Type: youtube
-- URL: https://www.youtube.com/watch?v=qOvc9IUKEIc
+- Type: article
+- URL: n/a
 - Author: Austin Marchese
 - Published: n/a

@@ -1,6 +1,9 @@
 # hash cache for enrich_and_simplify.py — regenerable, machine/session-specific
 .cache/
 
+# raw source files (intermediate artifacts, only keep processed/)
+raw/
+
 # never commit API keys
 .env
 *.key
@@ -8,3 +11,6 @@ secrets.json
 
 __pycache__/
 *.pyc
+
+# local virtualenv
+.venv/

@@ -21,35 +21,13 @@ scripts/
   build_manifest.py       # processed -> index/manifest.json
 ```
 
-`raw/` is a permanent, untouched archive — if the ingestion logic changes
-later, nothing is lost. `processed/` is flat (no category subfolders): a
-doc's category can change on re-classification without moving/renaming
-files, and `index/manifest.json` — not directory layout — is the intended
-way for an agent to find things.
-
-## Why this differs from the original draft design
-
-A few deliberate changes from the first design pass, made after looking at
-real sample files:
-
-- **No keyword-based categorization.** A naive keyword pass isn't reliable
-  enough to trust, and running it as a *separate* pass from the LLM call
-  would double API cost for no benefit. Every doc starts `category:
-  uncategorized` from `ingest.py` and gets properly classified the first
-  time `enrich_and_simplify.py` touches it.
-- **STE100 only touches `Summary` and `Key Takeaways`.** The whole point of
-  this repo is that other agents can review and reuse exact prompt/technique
-  text. Simplifying `Techniques / Prompts Extracted` or `Full Content` would
-  paraphrase prompts into different prompts. Those two sections are never
-  sent through controlled-English rewriting — only extracted or copied
-  verbatim.
-- **Classification + summarization + STE100 rewrite happen in one LLM call**,
-  not three. Same input tokens either way; one call halves the cost.
-- **Manifest carries `summary`, `word_count`, `has_extracted_techniques`,
-  `category`, `tags`** per entry — enough for an agent to decide "should I
-  open this file" without opening it.
-- **`processed/` has no category subdirectories** (see above) — the manifest
-  is the index, not the filesystem.
+`raw/` is a local-only archive (gitignored) — it keeps your original
+downloads so re-ingestion is always possible on the machine that has them,
+but it is not committed, so a fresh clone starts from `processed/` alone.
+`processed/` is flat (no category subfolders): a doc's category can change
+on re-classification without moving/renaming files, and
+`index/manifest.json` — not directory layout — is the intended way for an
+agent to find things.
 
 ## Setup
 
@@ -74,7 +52,11 @@ controlled-language rewrite task). Override with `STE100_MODEL=<id>`.
 1. Drop new transcripts/articles into `raw/youtube/` or `raw/articles/`
    (copy, don't move, from wherever you exported them).
 2. `python scripts/ingest.py` — normalizes them into `processed/`, no API
-   calls, safe to run anytime.
+   calls, safe to run anytime. Docs that have already been enriched keep
+   their category/tags/summary and their Summary / Key Takeaways /
+   Techniques sections; only Full Content and Source are refreshed from
+   `raw/`, so editing a raw file still propagates and re-triggers
+   enrichment for that doc.
 3. `git add raw processed` and commit. The pre-commit hook calls the LLM
    only on the `processed/*.md` files you just staged, rewrites them in
    place with category/tags/summary/takeaways/techniques filled in, and

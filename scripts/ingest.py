@@ -23,6 +23,12 @@ simplification all happen in one shot in scripts/enrich_and_simplify.py
 (the pre-commit hook), so every doc starts as category "uncategorized" /
 ste100_status "pending" until that hook — or a manual batch run of it — has
 processed it.
+
+Safe to re-run at any time: a processed doc that has already been enriched
+(ste100_status "simplified") keeps its category/tags/summary and its Summary /
+Key Takeaways / Techniques sections. Only Full Content and Source are refreshed
+from raw/, so editing a raw file still propagates — and changes the Full Content
+hash, which is what makes enrich_and_simplify.py reclassify it on the next pass.
 """
 import argparse
 import hashlib
@@ -34,8 +40,28 @@ from _frontmatter import parse_frontmatter, build_frontmatter, slugify
 
 MULTI_BLANK_RE = re.compile(r"\n{3,}")
 HTML_TAG_RE = re.compile(r"<[^>]+>")
+# Raw sources often carry trailing whitespace. Strip it here so ingest agrees
+# with the trim-trailing-whitespace pre-commit hook — otherwise the two fight:
+# the hook strips it from processed/, the next ingest restores it from raw/,
+# which changes the Full Content hash and re-triggers a paid enrich pass.
+TRAILING_WS_RE = re.compile(r"[ \t]+$", re.MULTILINE)
 TRANSCRIPT_SECTION_RE = re.compile(r"^##\s*Transcript\s*\n+(.*)", re.DOTALL | re.MULTILINE)
 H1_RE = re.compile(r"^#\s+(.+)$", re.MULTILINE)
+
+# Must stay in sync with SECTION_RE in enrich_and_simplify.py — both scripts
+# read/write the same section layout.
+SECTION_RE = re.compile(
+    r"## Summary\n\n(?P<summary>.*?)\n\n"
+    r"## Key Takeaways\n\n(?P<takeaways>.*?)\n\n"
+    r"## Techniques / Prompts Extracted\n\n(?P<techniques>.*?)\n\n"
+    r"## Full Content\n\n(?P<full_content>.*?)\n\n"
+    r"## Source",
+    re.DOTALL,
+)
+
+# Frontmatter fields that enrich_and_simplify.py owns; ingest must never
+# clobber these on a re-run. Everything else is re-derived from raw/.
+ENRICHED_FM_KEYS = ("category", "tags", "summary", "ste100_status", "ste100_model")
 
 STUB_SUMMARY = "_Pending enrichment — run scripts/enrich_and_simplify.py (or the pre-commit hook) to fill this in._"
 STUB_TAKEAWAYS = "_Pending enrichment._"
@@ -44,6 +70,7 @@ STUB_TECHNIQUES = "_Pending enrichment. If the source has no reusable prompts/te
 
 def clean_text(text: str) -> str:
     text = HTML_TAG_RE.sub("", text)
+    text = TRAILING_WS_RE.sub("", text)
     text = MULTI_BLANK_RE.sub("\n\n", text)
     return text.strip()
 
@@ -53,21 +80,72 @@ def content_id(source_type: str, slug: str) -> str:
     return f"{source_type}_{h}"
 
 
-def write_processed(out_dir: Path, source_type: str, slug: str, meta: dict, body: str) -> Path:
-    out_dir.mkdir(parents=True, exist_ok=True)
-    dest = out_dir / f"{source_type}-{slug}.md"
-    content = build_frontmatter(meta) + (
-        f"\n## Summary\n\n{STUB_SUMMARY}\n\n"
-        f"## Key Takeaways\n\n{STUB_TAKEAWAYS}\n\n"
-        f"## Techniques / Prompts Extracted\n\n{STUB_TECHNIQUES}\n\n"
-        f"## Full Content\n\n{body}\n\n"
+def source_block(meta: dict) -> str:
+    return (
         f"## Source\n\n- Type: {meta.get('source_type')}\n"
         f"- URL: {meta.get('source_url') or 'n/a'}\n"
         f"- Author: {meta.get('author') or 'n/a'}\n"
         f"- Published: {meta.get('published') or 'n/a'}\n"
     )
+
+
+def merge_preserving_enrichment(existing: str, meta: dict, body: str):
+    """Re-ingest an already-enriched doc without destroying the enrichment.
+
+    Keeps the LLM-authored frontmatter fields and the Summary / Key Takeaways /
+    Techniques sections, and swaps in freshly-ingested Full Content + Source so
+    edits to raw/ still propagate. Returns None when the destination isn't
+    enriched (or can't be parsed), meaning a plain overwrite is safe.
+
+    Note this is what keeps the enrich cache honest: the cache keys on a hash of
+    Full Content, so a raw edit changes the hash and the doc is re-enriched,
+    while an unchanged raw file round-trips byte-identically and stays cached.
+    """
+    old_meta, _, _ = parse_frontmatter(existing)
+    sections = SECTION_RE.search(existing)
+    if old_meta.get("ste100_status") != "simplified" or not sections:
+        return None
+
+    merged = dict(meta)
+    for key in ENRICHED_FM_KEYS:
+        if key in old_meta:
+            merged[key] = old_meta[key]
+    # First-seen date, not last-ingested date — don't reset it on a re-run.
+    merged["ingested"] = old_meta.get("ingested", meta["ingested"])
+
+    return build_frontmatter(merged) + (
+        f"\n## Summary\n\n{sections.group('summary')}\n\n"
+        f"## Key Takeaways\n\n{sections.group('takeaways')}\n\n"
+        f"## Techniques / Prompts Extracted\n\n{sections.group('techniques')}\n\n"
+        f"## Full Content\n\n{body}\n\n"
+        + source_block(meta)
+    )
+
+
+def write_processed(out_dir: Path, source_type: str, slug: str, meta: dict, body: str):
+    """Returns (dest, status) where status is 'new', 'rewritten', or 'preserved'."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    dest = out_dir / f"{source_type}-{slug}.md"
+
+    content = status = None
+    if dest.exists():
+        content = merge_preserving_enrichment(
+            dest.read_text(encoding="utf-8", errors="ignore"), meta, body
+        )
+        status = "preserved" if content else "rewritten"
+
+    if content is None:
+        status = status or "new"
+        content = build_frontmatter(meta) + (
+            f"\n## Summary\n\n{STUB_SUMMARY}\n\n"
+            f"## Key Takeaways\n\n{STUB_TAKEAWAYS}\n\n"
+            f"## Techniques / Prompts Extracted\n\n{STUB_TECHNIQUES}\n\n"
+            f"## Full Content\n\n{body}\n\n"
+            + source_block(meta)
+        )
+
     dest.write_text(content, encoding="utf-8")
-    return dest
+    return dest, status
 
 
 def base_meta(source_type: str, slug: str, title: str, source_url: str, author: str, published: str) -> dict:
@@ -106,8 +184,8 @@ def ingest_youtube(raw_dir: Path, out_dir: Path):
 
         slug = slugify(item.stem)
         meta = base_meta("youtube", slug, title, url, author, "")
-        dest = write_processed(out_dir, "youtube", slug, meta, cleaned)
-        print(f"[youtube] {item.name} -> {dest}")
+        dest, status = write_processed(out_dir, "youtube", slug, meta, cleaned)
+        print(f"[youtube] {item.name} -> {dest} ({status})")
 
 
 def ingest_articles(raw_dir: Path, out_dir: Path):
@@ -124,8 +202,8 @@ def ingest_articles(raw_dir: Path, out_dir: Path):
 
         slug = slugify(item.stem)
         meta = base_meta("article", slug, title, fm.get("url", ""), fm.get("author", ""), fm.get("published", ""))
-        dest = write_processed(out_dir, "article", slug, meta, cleaned)
-        print(f"[article] {item.name} -> {dest}")
+        dest, status = write_processed(out_dir, "article", slug, meta, cleaned)
+        print(f"[article] {item.name} -> {dest} ({status})")
 
 
 def main():

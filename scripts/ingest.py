@@ -33,6 +33,7 @@ hash, which is what makes enrich_and_simplify.py reclassify it on the next pass.
 import argparse
 import hashlib
 import re
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -122,10 +123,42 @@ def merge_preserving_enrichment(existing: str, meta: dict, body: str):
     )
 
 
-def write_processed(out_dir: Path, source_type: str, slug: str, meta: dict, body: str):
+def warn_on_collision(dest: Path, source: Path, body: str, claimed: dict) -> bool:
+    """Two raw files can slugify to the same processed name, in which case the
+    later one silently overwrites the earlier. Warn instead. Returns True if
+    this write clobbers a *different* document (i.e. real content loss).
+
+    claimed maps dest -> (raw source, body) for everything written this run.
+    """
+    prior = claimed.get(dest)
+    claimed[dest] = (source, body)
+    if prior is None:
+        return False
+
+    prior_source, prior_body = prior
+    if prior_body == body:
+        print(
+            f"  note: {source} and {prior_source} both map to {dest.name} "
+            f"(identical content, nothing lost)",
+            file=sys.stderr,
+        )
+        return False
+
+    print(
+        f"  WARNING: slug collision on {dest.name} — {source} overwrites "
+        f"{prior_source}, and their contents DIFFER. One of the two is lost. "
+        f"Rename one raw file.",
+        file=sys.stderr,
+    )
+    return True
+
+
+def write_processed(out_dir: Path, source_type: str, slug: str, meta: dict, body: str,
+                    source: Path, claimed: dict):
     """Returns (dest, status) where status is 'new', 'rewritten', or 'preserved'."""
     out_dir.mkdir(parents=True, exist_ok=True)
     dest = out_dir / f"{source_type}-{slug}.md"
+    warn_on_collision(dest, source, body, claimed)
 
     content = status = None
     if dest.exists():
@@ -165,7 +198,7 @@ def base_meta(source_type: str, slug: str, title: str, source_url: str, author: 
     }
 
 
-def ingest_youtube(raw_dir: Path, out_dir: Path):
+def ingest_youtube(raw_dir: Path, out_dir: Path, claimed: dict):
     yt_dir = raw_dir / "youtube"
     if not yt_dir.exists():
         return
@@ -184,11 +217,13 @@ def ingest_youtube(raw_dir: Path, out_dir: Path):
 
         slug = slugify(item.stem)
         meta = base_meta("youtube", slug, title, url, author, "")
-        dest, status = write_processed(out_dir, "youtube", slug, meta, cleaned)
+        dest, status = write_processed(
+            out_dir, "youtube", slug, meta, cleaned, item, claimed
+        )
         print(f"[youtube] {item.name} -> {dest} ({status})")
 
 
-def ingest_articles(raw_dir: Path, out_dir: Path):
+def ingest_articles(raw_dir: Path, out_dir: Path, claimed: dict):
     art_dir = raw_dir / "articles"
     if not art_dir.exists():
         return
@@ -202,7 +237,9 @@ def ingest_articles(raw_dir: Path, out_dir: Path):
 
         slug = slugify(item.stem)
         meta = base_meta("article", slug, title, fm.get("url", ""), fm.get("author", ""), fm.get("published", ""))
-        dest, status = write_processed(out_dir, "article", slug, meta, cleaned)
+        dest, status = write_processed(
+            out_dir, "article", slug, meta, cleaned, item, claimed
+        )
         print(f"[article] {item.name} -> {dest} ({status})")
 
 
@@ -214,8 +251,12 @@ def main():
 
     raw_dir = Path(args.raw_dir)
     out_dir = Path(args.out_dir)
-    ingest_youtube(raw_dir, out_dir)
-    ingest_articles(raw_dir, out_dir)
+    # dest -> (raw source, body) for every doc written this run, so two raw
+    # files that slugify to the same name are reported rather than silently
+    # overwriting each other.
+    claimed = {}
+    ingest_youtube(raw_dir, out_dir, claimed)
+    ingest_articles(raw_dir, out_dir, claimed)
 
 
 if __name__ == "__main__":

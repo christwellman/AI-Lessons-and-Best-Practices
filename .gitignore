@@ -1,8 +1,9 @@
+# raw/ is local scratch space, not a tracked archive — see README for why.
+# processed/ (git-tracked) is the source of truth once ingest.py has run.
+raw/
+
 # hash cache for enrich_and_simplify.py — regenerable, machine/session-specific
 .cache/
-
-# raw source files (intermediate artifacts, only keep processed/)
-raw/
 
 # never commit API keys
 .env

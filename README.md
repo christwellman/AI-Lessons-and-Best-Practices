@@ -32,11 +32,10 @@ these counts under `generated_entries`, `categories`, and
 ## How it's organized
 
 ```
-raw/                        # gitignored — local-only source archive
-  youtube/<slug>.md         # untouched copies of downloaded transcripts
-  articles/<slug>.md        # untouched copies of downloaded articles
+raw/
+  <slug>.md               # local scratch space, gitignored, not tracked
 processed/
-  <source_type>-<slug>.md   # normalized markdown, one file per doc, flat
+  <source_type>-<slug>.md  # normalized markdown, one file per doc, flat
 index/
   manifest.json             # generated — read this first, not the tree
 scripts/
@@ -47,9 +46,6 @@ scripts/
 .cache/                     # gitignored — enrich hash cache, regenerable
 ```
 
-`raw/` is a local-only archive (gitignored) — it keeps your original
-downloads so re-ingestion is always possible on the machine that has them,
-but it is not committed, so a fresh clone starts from `processed/` alone.
 `processed/` is flat (no category subfolders): a doc's category can change
 on re-classification without moving/renaming files, and
 `index/manifest.json` — not directory layout — is the intended way for an
@@ -60,6 +56,48 @@ Each processed doc has the same five sections: `Summary`, `Key Takeaways`,
 simplification only rewrites `Summary` and `Key Takeaways` — `Techniques /
 Prompts Extracted` and `Full Content` are kept verbatim, so quoted prompts
 stay usable rather than being paraphrased into different prompts.
+
+**`raw/` is deliberately NOT a tracked archive.** The original design kept
+raw sources permanently git-tracked as a safety net for future re-ingestion.
+That was dropped as duplicative: `raw/` is gitignored local scratch space —
+drop files in, run `ingest.py`, and the normalized `processed/*.md` is the
+only thing that ends up in git. `ingest.py --delete-after-ingest` will even
+remove each raw file once it's been written to `processed/`, if you don't
+want raw copies lingering on disk either. Trade-off, made deliberately: if
+the ingestion logic changes later, there's no raw archive to re-run it
+against — only `processed/` output as it existed at ingest time.
+
+Source type (YouTube vs. article) is auto-detected per file — a `video:`
+frontmatter field or a `## Transcript` heading means YouTube, otherwise
+article — so `raw/` is a single flat folder with no sorting step and no
+"wrong folder" to put a file in.
+
+## Why this differs from the original draft design
+
+A few deliberate changes from the first design pass, made after looking at
+real sample files:
+
+- **No keyword-based categorization.** A naive keyword pass isn't reliable
+  enough to trust, and running it as a *separate* pass from the LLM call
+  would double API cost for no benefit. Every doc starts `category:
+  uncategorized` from `ingest.py` and gets properly classified the first
+  time `enrich_and_simplify.py` touches it.
+- **STE100 only touches `Summary` and `Key Takeaways`.** The whole point of
+  this repo is that other agents can review and reuse exact prompt/technique
+  text. Simplifying `Techniques / Prompts Extracted` or `Full Content` would
+  paraphrase prompts into different prompts. Those two sections are never
+  sent through controlled-English rewriting — only extracted or copied
+  verbatim.
+- **Classification + summarization + STE100 rewrite happen in one LLM call**,
+  not three. Same input tokens either way; one call halves the cost.
+- **Manifest carries `summary`, `word_count`, `has_extracted_techniques`,
+  `category`, `tags`** per entry — enough for an agent to decide "should I
+  open this file" without opening it.
+- **`processed/` has no category subdirectories** (see above) — the manifest
+  is the index, not the filesystem.
+- **`raw/` is gitignored scratch space, not a tracked archive**, and has no
+  youtube/articles split — source type is auto-detected per file. See the
+  callout above for the trade-off this accepts.
 
 ## Setup
 
@@ -78,23 +116,29 @@ export GEMINI_API_KEY=...        # default provider
 
 Default model is Gemini 3.5 Flash-Lite (cheapest capable option for a
 controlled-language rewrite task; 2.5 Flash-Lite is retired for new API
-keys as of Aug 2026). Override with `STE100_MODEL=<id>`.
+keys as of Aug 2026). Override with `STE100_MODEL=<id>`. Free-tier Gemini keys are
+rate-limited (commonly 15 requests/minute) — `enrich_and_simplify.py`
+retries with backoff on rate-limit errors, so a bulk run just goes slower
+under a free-tier key rather than failing partway through.
 
 ## Day-to-day workflow
 
-1. Drop new transcripts/articles into `raw/youtube/` or `raw/articles/`
-   (copy, don't move, from wherever you exported them). Files must end in
-   `.md` — anything else is skipped by the glob without comment.
+1. Drop new transcripts/articles into `raw/` (copy, don't move, from
+   wherever you exported them — any mix of YouTube transcripts and
+   articles, source type is auto-detected). Files must end in `.md` —
+   anything else is skipped by the glob without comment.
 2. `python scripts/ingest.py` — normalizes them into `processed/`, no API
    calls, safe to run anytime. Each doc is reported as `new`, `rewritten`,
    or `preserved`. Docs that have already been enriched are `preserved`:
    they keep their category/tags/summary and their Summary / Key Takeaways
    / Techniques sections, and only Full Content and Source are refreshed
    from `raw/`, so editing a raw file still propagates and re-triggers
-   enrichment for that doc.
-3. `git add processed` and commit. The pre-commit hook calls the LLM only
-   on the `processed/*.md` files you just staged, rewrites them in place
-   with category/tags/summary/takeaways/techniques filled in, and exits
+   enrichment for that doc. Add `--delete-after-ingest` if you don't want
+   the raw copies kept around locally either.
+3. `git add processed` and commit (there's nothing to add under `raw/` —
+   it's gitignored). The pre-commit hook calls the LLM only on the
+   `processed/*.md` files you just staged, rewrites them in place with
+   category/tags/summary/takeaways/techniques filled in, and exits
    non-zero so you can review the diff.
 4. Review the diff, `git add` again, commit again — same pattern as
    Black/Prettier autofix hooks.

@@ -5,25 +5,26 @@ source_type: "youtube"
 source_url: "https://www.youtube.com/watch?v=0lXbEHKDLp8&time_continue=3&source_ve_path=NzY3NTg&embeds_referring_euri=https%3A%2F%2Fwww.reddit.com%2F&embeds_referring_origin=https%3A%2F%2Fwww.reddit.com"
 author: "Karlos Obsidian Tutorials"
 published: ""
-ingested: "2026-08-10"
+ingested: "2026-08-23"
 category: "tools"
-tags: [obsidian, note-taking, plugin, file-navigation]
-summary: "The notebook navigator plug-in upgrades file navigation in Obsidian vaults. It provides dual-pane layouts, file previews, tags, icons, colors, and folder hiding. Users can also install recommended companion plugins for images, styling, and advanced search."
+tags: [obsidian, plugin, file-management, ui-customization]
+summary: "The notebook navigator plug-in for Obsidian replaces the default file explorer with a mobile-optimized dual-pane view. Users install the plug-in from community settings and combine it with featured image, style settings, and omnisarch plug-ins. The tool supports tag navigation, folder shortcuts, pinned notes, custom icons, and folder background colors. Users also can hide specific directories and use advanced search providers for full-text searches."
 ste100_status: "simplified"
 ste100_model: "gemini-3.5-flash-lite"
 ---
 
 ## Summary
 
-The notebook navigator plug-in upgrades file navigation in Obsidian vaults. It provides dual-pane layouts, file previews, tags, icons, colors, and folder hiding. Users can also install recommended companion plugins for images, styling, and advanced search.
+The notebook navigator plug-in for Obsidian replaces the default file explorer with a mobile-optimized dual-pane view. Users install the plug-in from community settings and combine it with featured image, style settings, and omnisarch plug-ins. The tool supports tag navigation, folder shortcuts, pinned notes, custom icons, and folder background colors. Users also can hide specific directories and use advanced search providers for full-text searches.
 
 ## Key Takeaways
 
-- Install the notebook navigator plug-in from community plugins in Obsidian.
-- Install the featured image and style settings plugins for full visual support.
-- Configure custom icons, folder backgrounds, and text colors to organize directories.
-- Pin folders to shortcuts and pin specific notes to the top of lists.
-- Enable the omnisarch plugin to improve search performance across full text.
+- Install the notebook navigator plug-in from the Obsidian community plugins menu.
+- Pair the plug-in with featured image, style settings, and omnisarch plug-ins for full functionality.
+- Pin important folders to shortcuts and pin specific notes to the top of folders.
+- Add custom icons and background colors to folders and individual files.
+- Hide unwanted folders by entering folder names into the plug-in settings.
+- Enable the omnisarch search provider for precise full-text searches across notes.
 
 ## Techniques / Prompts Extracted
 

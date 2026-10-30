@@ -12,4 +12,6 @@ secrets.json
 
 __pycache__/
 *.pyc
+
+# local virtualenv
 .venv/

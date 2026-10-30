@@ -5,26 +5,27 @@ source_type: "youtube"
 source_url: "https://www.youtube.com/watch?v=qOvc9IUKEIc"
 author: "Austin Marchese"
 published: ""
-ingested: "2026-08-10"
+ingested: "2026-08-23"
 category: "skills"
 tags: [claude-skills, prompt-engineering, agentic-workflows, anthropic]
-summary: "Anthropic engineers use reusable Claude skills instead of traditional individual prompts. Skills contain three layers: descriptions, instructions, and tools like scripts. Users build small composable skills and update them after each session to create a compounding improvement loop."
+summary: "Anthropic engineers prompt Claude using composable skills instead of repetitive custom prompts. Skills package procedural knowledge into folders containing descriptions, instructions, and tools like Python scripts. Users update skills continuously after each session to create a compounding improvement loop."
 ste100_status: "simplified"
 ste100_model: "gemini-3.5-flash-lite"
 ---
 
 ## Summary
 
-Anthropic engineers use reusable Claude skills instead of traditional individual prompts. Skills contain three layers: descriptions, instructions, and tools like scripts. Users build small composable skills and update them after each session to create a compounding improvement loop.
+Anthropic engineers prompt Claude using composable skills instead of repetitive custom prompts. Skills package procedural knowledge into folders containing descriptions, instructions, and tools like Python scripts. Users update skills continuously after each session to create a compounding improvement loop.
 
 ## Key Takeaways
 
 - Stop writing new prompts for repetitive tasks and build Claude skills instead.
-- A skill includes three parts: a clear description, step-by-step instructions, and executable tools.
-- Build small, focused, and composable skills instead of one massive skill for every task.
-- Save deterministic Python scripts inside skill folders to trade expensive AI tokens for cheap code compute.
-- Set user invocable flags to false for hidden agent-only tools, and disable model invocation for high-risk actions.
-- Update your skills after every session to capture edge cases and compound performance over time.
+- Structure skills with three layers: description, instructions, and tools.
+- Prioritize building robust tools, code scripts, and reference files inside skills.
+- Build small, composable, and reusable skills rather than one massive skill.
+- Save deterministic Python scripts inside skills to trade expensive AI tokens for cheap code compute.
+- Use user-invocable and disable-model-invocation flags to control who runs specific skills.
+- Update skills after every session to capture edge cases and compound performance over time.
 
 ## Techniques / Prompts Extracted
 
